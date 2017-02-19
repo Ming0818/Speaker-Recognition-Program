@@ -1,0 +1,74 @@
+clc; close all;clear all;
+%Code to sort and compare voice files.  This code first compares the 
+%reference wav file to all others based on average pitch.  The top 12 
+%most likely matches are then compared by the differences in their &formant peak vectors.  
+%The resulting closest matches are then 
+%displayed.  This code needs pitch.m, pitchacorr.m, formant.m, and 
+%pickmax.m in the same directory in order to run.  
+results=zeros(12,1);    %create a vector for results. 
+diff=zeros(82,1);    %create a vector for differences in pitch. 
+formantdiff=zeros(12,1);  %create a vector for diff in formant vector  
+[y17, fs17] = audioread('a17.wav'); %read in the wav file to 
+                                    %compare all others to.  
+[t17, f017, avgF017] = pitch(y17,fs17);  %call the pitch rouine for 
+                                         %ref. wav file. 
+%[P17,F17,I17] = formant(y17);      %call the formant routine for ref. wav file.  
+%plot(t17,f017)      %plot the pitch contour of the ref. 
+N = length(y17);
+y17dft = fft(y17);
+y17dft = y17dft(1:N/2+1);
+psdy = (1/(fs17*N)) * abs(y17dft).^2;
+psdy(2:end-1) = 2*psdy(2:end-1);
+freq = 0:fs17/length(y17):fs17/2;
+p=10*log10(psdy);
+avgF17 = avgF017 ;   %set the average pitch equal to avg17 
+sound(y17)  
+ pause(3)            %pause for 3 seconds      
+
+ for i=11:20     
+     if i<10       
+         filename = sprintf('a0%i.wav', i);     
+     else
+         filename = sprintf('a%i.wav', i);   
+     end
+     [y, fs] = audioread(filename);
+     
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+[t, f0, avgF0] = pitch(y,fs);  %call the pitch.m routine for the current wav file.  
+ plot(t,f0)      %plot the current wav file contour plot.  
+ avgF0(i) = avgF0; %find the average pitch for the current wav file.  
+ diff(i,1)=norm(avgF0(i)-avgF17); %create a vector of avg. pitch diff between current wav file and 
+                                   %reference wav file.  
+i       %display the index to see where the comparison is.  
+end   
+[Y,H]=sort(diff) ; %sort the pitch correlations in ascending order.  
+for j=1:12 %pick the lowest 20 pitch correlations to compare formants .  
+   p=H(j)   %set p equal to jth position of vector H .     
+   if p<10        
+       filename = sprintf('a0%i.wav', p);     
+   else
+       filename = sprintf('a%i.wav', p);
+   end
+   filename   %display the filename of the wav file being compared.    
+   [y, fs] = audioread(filename);  
+  % [P,F,I] = formant(y); %call the formant.m routine for the current wav .
+  N = length(y);
+ydft = fft(y);
+ydft = ydft(1:N/2+1);
+psdy = (1/(fs*N)) * abs(ydft).^2;
+psdy(2:end-1) = 2*psdy(2:end-1);
+freq = 0:fs/length(y):fs/2;
+p=10*log10(psdy);
+
+   sound(y)      %play back the wav file being compared. 
+   plot(F,P)     %plot the formants for the comparison wav file. 
+   pause(3)   %pause for 3 seconds so sound will finish playing back. 
+   formantdiff(j,1)=norm(I17-I); %create a vector of formant peak differences. 
+end
+[Y1,H1]=sort(formantdiff); %sort the vector in ascending order
+for k=1:12    
+    results(k,1)=H(H1(k)); %calculate the numerical numbers of the closest wav matches.     
+end  
+H;  %display the vector H. 
+H1  %display the vector H1. 
+results %display the numerical numbers of the closest wav file matches. 
